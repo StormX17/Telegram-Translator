@@ -239,23 +239,32 @@
       const text = element.tagName === 'TEXTAREA' ? element.value : element.textContent;
       const langCode = document.getElementById(langSelectId).value;
 
-      if (!text || text === 'Bu yerda tarjima chiqadi...' || text === 'Iltimos, matn kiriting!') {
+      if (!text || text.includes('Bu yerda tarjima') || text.includes('Iltimos') || text.includes('⏳')) {
         return;
       }
+
+      if (!('speechSynthesis' in window)) {
+        alert("Sizning qurilmangiz ovozli o'qishni qo'llab-quvvatlamaydi.");
+        return;
+      }
+
+      window.speechSynthesis.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = langCode;
 
-      window.speechSynthesis.cancel();
+      utterance.onerror = (event) => {
+        console.error('Ovoz chiqarishda xatolik:', event);
+      };
+
       window.speechSynthesis.speak(utterance);
     }
 
-    // Natijani nusxalash funksiyasi
     function copyOutputText() {
       const text = document.getElementById('outputText').textContent;
       const copyBtn = document.getElementById('copyBtn');
 
-      if (!text || text === 'Bu yerda tarjima chiqadi...' || text === 'Iltimos, matn kiriting!' || text === 'Tarjima qilinmoqda... ⏳') {
+      if (!text || text.includes('Bu yerda tarjima') || text.includes('Iltimos') || text.includes('⏳')) {
         return;
       }
 
@@ -264,6 +273,8 @@
         setTimeout(() => {
           copyBtn.textContent = '📋 Nusxalash';
         }, 2000);
+      }).catch(err => {
+        console.error('Nusxalashda xatolik:', err);
       });
     }
 
