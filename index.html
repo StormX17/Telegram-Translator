@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Telegram Translator</title>
-  <!-- Telegram WebApp API -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
@@ -56,7 +55,7 @@
     }
     textarea {
       width: 100%;
-      height: 100px;
+      height: 90px;
       border-radius: 10px;
       border: 1px solid #ccc;
       padding: 10px;
@@ -92,6 +91,23 @@
       font-size: 15px;
       word-wrap: break-word;
     }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .action-btn {
+      background: #4a5568;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .action-btn:active {
+      opacity: 0.8;
+    }
   </style>
 </head>
 <body>
@@ -106,6 +122,9 @@
 
     <div class="input-group">
       <textarea id="inputText" placeholder="Tarjima qilinadigan matnni kiriting..."></textarea>
+      <div class="btn-row">
+        <button class="action-btn" onclick="speakText('inputText', 'sourceLang')">🔊 Eshitish</button>
+      </div>
     </div>
 
     <button id="translateBtn" onclick="translateText()">Tarjima qilish</button>
@@ -113,6 +132,10 @@
     <div class="output-group">
       <label>Natija:</label>
       <div id="outputText" class="output-box">Bu yerda tarjima chiqadi...</div>
+      <div class="btn-row">
+        <button class="action-btn" onclick="speakText('outputText', 'targetLang')">🔊 Eshitish</button>
+        <button class="action-btn" id="copyBtn" onclick="copyOutputText()">📋 Nusxalash</button>
+      </div>
     </div>
   </div>
 
@@ -209,6 +232,39 @@
       } catch (error) {
         outputBox.textContent = 'Tarmoq yoki soʻrovda xatolik.';
       }
+    }
+
+    function speakText(elementId, langSelectId) {
+      const element = document.getElementById(elementId);
+      const text = element.tagName === 'TEXTAREA' ? element.value : element.textContent;
+      const langCode = document.getElementById(langSelectId).value;
+
+      if (!text || text === 'Bu yerda tarjima chiqadi...' || text === 'Iltimos, matn kiriting!') {
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = langCode;
+
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // Natijani nusxalash funksiyasi
+    function copyOutputText() {
+      const text = document.getElementById('outputText').textContent;
+      const copyBtn = document.getElementById('copyBtn');
+
+      if (!text || text === 'Bu yerda tarjima chiqadi...' || text === 'Iltimos, matn kiriting!' || text === 'Tarjima qilinmoqda... ⏳') {
+        return;
+      }
+
+      navigator.clipboard.writeText(text).then(() => {
+        copyBtn.textContent = '✅ Nusxalandi!';
+        setTimeout(() => {
+          copyBtn.textContent = '📋 Nusxalash';
+        }, 2000);
+      });
     }
 
     initLanguages();
